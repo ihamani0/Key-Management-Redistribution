@@ -42,8 +42,9 @@ app.use(express.static("public"));
 
 // Mount the authentication routes
 app.use("/api/auth", authRoutes);
+
 app.use("/api/user", userRoutes);
-// You could add other routes here, e.g., app.use('/api/users', userRoutes);
+
 
 //notFound Route
 app.all(/(.*)/, (req, res, next) => {
@@ -52,8 +53,8 @@ app.all(/(.*)/, (req, res, next) => {
 
 // --- Error Handling Middleware ---
 // IMPORTANT: Error handler must be the LAST piece of middleware added
-
 app.use(errorHandler);
+
 
 // Start the server after sync the database with all ccossbonding Models(tables)
 
