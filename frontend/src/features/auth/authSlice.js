@@ -81,15 +81,12 @@ const authSlice = createSlice({
         state.isAuthLoading = false;
         state.isAuth = true;
         state.user = action.payload.user;
-        state.token = localStorage.getItem("authToken");
         state.error = ""; // Clear error on new attempt
       })
       .addCase(checkAuth.rejected, (state, action) => {
         state.isAuthLoading = false;
         state.isAuth = false;
         state.user = null;
-        state.token = null;
-        localStorage.removeItem("authToken"); // Ensure token is removed on fail
       })
       .addCase(logoutUser.pending,(state,action)=>{
         state.isAuthLoading = true;

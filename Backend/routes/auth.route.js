@@ -3,10 +3,10 @@ import express from "express";
 import {
   loginController,
   registerController,
-  checkAuthController ,
+  checkAuthController,
   LogoutController
-} from "../controllers/authController.js";
-import authMiddleware from "../middleware/authMiddleware.js";
+} from "../controllers/auth.controller.js";
+import authMiddleware from "../middleware/auth.middleware.js";
 import { body } from "express-validator";
 import { validateRequest } from "../utils/validateRequest.js";
 
@@ -48,7 +48,7 @@ router.post(
   registerController
 );
 
-router.get('/checkAuth' , authMiddleware ,  checkAuthController)
-router.get('/logout' , authMiddleware ,  LogoutController)
+router.get('/checkAuth', authMiddleware, checkAuthController)
+router.get('/logout', authMiddleware, LogoutController)
 
 export default router;

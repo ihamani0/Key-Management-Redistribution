@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { USER } from "../models/index.js";
-import asyncHandler from "express-async-handler";
+import expressAsyncHandler from "express-async-handler";
 import { generateToken } from "../utils/generateToken.js";
 import dotEnv from "dotenv";
 
@@ -11,8 +11,10 @@ dotEnv.config();
  * @route   POST /api/login
  * @access  Public
  */
-export const loginController = asyncHandler(async (req, res) => {
+export const loginController = expressAsyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
+  console.log(email, password);
 
   if (!email || !password) {
     const error = new Error("Fill All The Field");
@@ -23,7 +25,7 @@ export const loginController = asyncHandler(async (req, res) => {
 
   const user = await USER.findOne({ where: { email } });
   if (!user) {
-    const error = new Error("Invalid email or password");
+    const error = new Error("Invalid email");
     error.status = "Unauthorized";
     error.statusCode = 401;
     throw error;
@@ -33,7 +35,7 @@ export const loginController = asyncHandler(async (req, res) => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    const error = new Error("Invalid email or password");
+    const error = new Error("Password incorrect");
     error.status = "Unauthorized";
     error.statusCode = 401;
     throw error;
@@ -67,8 +69,8 @@ export const loginController = asyncHandler(async (req, res) => {
  * @route   POST /api/register
  * @access  Public
  */
-export const registerController = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+export const registerController = expressAsyncHandler(async (req, res) => {
+  const { username, name, email, password } = req.body;
 
   //validation
 
@@ -83,6 +85,7 @@ export const registerController = asyncHandler(async (req, res) => {
   const passwordHash = await bcrypt.hash(password, 10);
 
   const newUser = await USER.create({
+    username,
     name,
     email,
     password: passwordHash,
@@ -98,6 +101,7 @@ export const registerController = asyncHandler(async (req, res) => {
   const payload = {
     id: newUser.id,
     name: newUser.name,
+    username: newUser.username,
     email: newUser.email,
   };
 
@@ -122,7 +126,7 @@ export const registerController = asyncHandler(async (req, res) => {
 //understan async handler
 //apply json
 
-export const LogoutController = asyncHandler(async (req, res) => {
+export const LogoutController = expressAsyncHandler(async (req, res) => {
   res.clearCookie("authToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -132,7 +136,7 @@ export const LogoutController = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
-export const checkAuthController = asyncHandler(async (req, res) => {
+export const checkAuthController = expressAsyncHandler(async (req, res) => {
   const user = req.user;
   res.status(200).json({
     message: "The user is Authorized",

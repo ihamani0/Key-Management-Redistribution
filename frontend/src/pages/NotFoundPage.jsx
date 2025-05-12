@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 function NotFoundPage() {
   return (
-    <section class=" containerStyled">
+    <section class="min-h-screen bg-gray-950 bg-[radial-gradient(circle_at_bottom,rgba(255,255,255,0.05)_0%,transparent_80%)] ">
       <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
         <div class="mx-auto max-w-screen-sm text-center">
           <h1 class="mb-4 text-7xl tracking-tight font-extrabold lg:text-9xl text-gray-200">
