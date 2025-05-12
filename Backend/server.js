@@ -11,39 +11,10 @@ dotenv.config();
 
 // //--------------------------------------------------------------------------------------------
 
-<<<<<<< HEAD
 const PORT = process.env.PORT || 5000;
-=======
-//log
-if (process.env.NODE_ENV === "dev") {
-  app.use(morgan("dev"));
-  console.log("--- Mode : ---:", process.env.NODE_ENV);
-}
-
-// Serve static files from the public directory
-app.use(express.static("public"));
-
-// Mount the authentication routes
-app.use("/api/auth", authRoutes);
-
-app.use("/api/user", userRoutes);
-
-
-//notFound Route
-app.all(/(.*)/, (req, res, next) => {
-  next(new notFoundError(404, "Ther is No route exsists")); // This forwards the error to your error-handling middleware
-});
-
-// --- Error Handling Middleware ---
-// IMPORTANT: Error handler must be the LAST piece of middleware added
-app.use(errorHandler);
-
-
-// Start the server after sync the database with all ccossbonding Models(tables)
->>>>>>> 38bef84563932b0892d296ed59c1b3d2424f6b9e
 
 sequelize
-  .sync({force:true})
+  .sync()
   .then(() => {
     console.log('Database synchronized.');
     app.listen(PORT, '0.0.0.0' ,  () => console.log(`Server running on http://0.0.0.0:${PORT}`));

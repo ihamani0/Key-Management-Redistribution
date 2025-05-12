@@ -12,8 +12,5 @@ const sequelize = new Sequelize(
   }
 );
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 38bef84563932b0892d296ed59c1b3d2424f6b9e
 export default sequelize;
