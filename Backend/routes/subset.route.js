@@ -10,6 +10,6 @@ const router = express.Router();
 // Create a new Subset
 router.post("/create", authMiddlware, create);
 // retrive all subset
-router.get("/all", authMiddlware, retriveAll);
+router.get("/getAll", authMiddlware, retriveAll);
 
 export default router; 

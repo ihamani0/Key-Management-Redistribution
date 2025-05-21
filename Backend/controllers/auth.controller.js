@@ -1,11 +1,13 @@
 import bcrypt from "bcryptjs";
-import { USER } from "../models/index.js";
+import db from "../models/index.js";
 import expressAsyncHandler from "express-async-handler";
 import { generateToken } from "../utils/generateToken.js";
 import dotEnv from "dotenv";
 
 dotEnv.config();
 
+
+const { User } = db;
 /**
  * @desc    Login a user and return a JWT and user data
  * @route   POST /api/login
@@ -23,7 +25,7 @@ export const loginController = expressAsyncHandler(async (req, res) => {
     throw error;
   }
 
-  const user = await USER.findOne({ where: { email } });
+  const user = await User.findOne({ where: { email } });
   if (!user) {
     const error = new Error("Invalid email");
     error.status = "Unauthorized";
@@ -74,7 +76,7 @@ export const registerController = expressAsyncHandler(async (req, res) => {
 
   //validation
 
-  const existsUser = await USER.findOne({ where: { email } });
+  const existsUser = await User.findOne({ where: { email } });
   if (existsUser) {
     const error = new Error("A user already exists with this email.");
     error.statusCode = 400;
@@ -84,7 +86,7 @@ export const registerController = expressAsyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  const newUser = await USER.create({
+  const newUser = await User.create({
     username,
     name,
     email,

@@ -1,7 +1,7 @@
 import expressAsyncHandler from "express-async-handler";
-import { Subset } from "../models/index.js"
+import  db from "../models/index.js"
 
-
+const { Subset } = db;
 // Create a new Subset
 export const create = expressAsyncHandler(async (req, res) => {
 

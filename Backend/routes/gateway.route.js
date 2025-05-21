@@ -1,6 +1,6 @@
 import express from "express";
 
-import { Authenticate, register, retriveAll } from "../controllers/gateway.controller.js"
+import { Authenticate, register, getAll, getGatewayTask } from "../controllers/gateway.controller.js"
 import authMiddlware from "../middleware/auth.middleware.js";
 
 
@@ -12,6 +12,10 @@ router.post("/verify-gateway", Authenticate);
 router.post("/register", register);
 
 //client side
-router.get("/All", authMiddlware, retriveAll);
+router.get("/getAll", authMiddlware, getAll);
+
+
+//pool gateway Taks
+router.get('/:gatewayGuid/task', getGatewayTask);
 
 export default router; 
