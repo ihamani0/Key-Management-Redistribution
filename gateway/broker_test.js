@@ -6,9 +6,7 @@ var options = {
     port: 8883,
     protocol: 'mqtts',
     username: 'xxxxxxxxxxxxxx',
-    password: 'xxxxxxxxxxxxxxxxxxxx@'
-    username: 'xxxxxxxx',
-    password: 'xxxxxxxxxxxx@'
+    password: 'xxxxxxxxxxxxxxxxxxxx@',
 }
 
 // initialize the MQTT client
