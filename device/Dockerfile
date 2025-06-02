@@ -1,12 +1,11 @@
 FROM python:3.13-slim
 
-WORKDIR /app
-COPY device_subscriber.py .
+WORKDIR /usr/src/device
 
-# This will install paho-mqtt when the image is built
+COPY . .
+
 RUN pip install --no-cache-dir paho-mqtt
 
-# Suppress pip‑as‑root warning (already in your original, good)
 ENV PIP_ROOT_USER_ACTION=ignore
 
-CMD ["python", "device_subscriber.py"]
+CMD ["python", "device_main.py"]

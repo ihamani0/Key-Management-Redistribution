@@ -5,7 +5,7 @@ import cryptoService from "../service/crypto.service.js";
 import sessionStoreService from "../service/session-store.service.js"
 import { where } from "sequelize";
 
-const { Gateway, Subset, KeyTask, Device } = db;
+const { Gateway, Subset, KeyTask, Device, Op } = db;
 
 
 
@@ -198,7 +198,11 @@ export const getGatewayTask = expressAsyncHandler(async (req, res) => {
     //fetch Task that belongs to Gateway that are in pending  status
 
     const tasks = await KeyTask.findAll({
-        where: { targetGatewayId: gatewayDetails.id, status: 'pending' },
+        where: {
+            targetGatewayId: gatewayDetails.id,
+            status: 'pending'
+        },
+
         include: [{ model: Device, as: 'device' }]
     });
 
@@ -207,6 +211,7 @@ export const getGatewayTask = expressAsyncHandler(async (req, res) => {
     const processedTasks = tasks.map(task => {
         // 1) toPlainObject strips circular refs:
         const plain = task.get({ plain: true });
+
 
         // 2) Decrypt the payload (still a string in DB)
         plain.payload = cryptoService.decryptFromDatabase(plain.payload);

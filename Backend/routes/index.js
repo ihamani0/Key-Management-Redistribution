@@ -5,6 +5,8 @@ import subsetRoute from "./subset.route.js"
 import gatewayRoute from "./gateway.route.js"
 import deviceRoute from "./device.route.js"
 import taskRoute from "./task.route.js";
+import deviceKeyRoutes from "./deviceKey.route.js";
+
 const router = express.Router();
 
 
@@ -19,6 +21,8 @@ router.use('/gateway', gatewayRoute);
 router.use('/device', deviceRoute);
 
 router.use('/task', taskRoute);
+
+router.use('/device-key', deviceKeyRoutes);
 
 // router.use('/v1/devices', deviceRoutes);
 router.get('/health', (req, res) => res.status(200).send('OK'));

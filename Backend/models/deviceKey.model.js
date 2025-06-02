@@ -15,16 +15,27 @@ export default (sequelize, DataTypes) => {
             field: 'key_type' // 'pairwise', 'groupwise'
         },
 
-        //deviceId || INTEGER (FOREIGN KEY, NOT NULL) || Links to the device that owns this key.
+        deviceId:
+        {
+            type: DataTypes.INTEGER,
+            field: 'device_id',
+            as: 'device', // Alias for association
+        },
 
+        peerDeviceId:
+        {
+            type: DataTypes.INTEGER,
+            field: 'peer_device_id',
+            as: 'peerDevice',
+        },
 
         //    peerDeviceId || INTEGER (FOREIGN KEY) || Links to a peer device (for pairwise keys).
         // peerGatewayId  || INTEGER (FOREIGN KEY)  || Links to a gateway (for groupwise keys).
 
 
-        keyValueEncrypted: {
+        keyHash: {
             type: DataTypes.TEXT,
-            field: 'key_value_encrypted'  //Encrypted value of the key (stored securely).
+            field: 'key_encrypted'  //Encrypted value of the key (stored securely).
         },
         keyVersion: {
             type: DataTypes.INTEGER,
@@ -37,15 +48,15 @@ export default (sequelize, DataTypes) => {
             defaultValue: 'active', //Status of the key (active/expired/revoked).
             field: 'key_status'
         },
-        validFrom: {
-            type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
-            field: 'valid_from'  //Timestamp when the key becomes valid.
-        },
-        validUntil: {
-            type: DataTypes.DATE,
-            field: 'valid_until' //Timestamp when the key expires.
-        },
+        // validFrom: {
+        //     type: DataTypes.DATE,
+        //     defaultValue: DataTypes.NOW,
+        //     field: 'valid_from'  //Timestamp when the key becomes valid.
+        // },
+        // validUntil: {
+        //     type: DataTypes.DATE,
+        //     field: 'valid_until' //Timestamp when the key expires.
+        // },
 
         // Add unique indexes later if needed for composite keys
     })

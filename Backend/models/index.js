@@ -7,6 +7,7 @@ import SubsetModel from "./subset.model.js";
 import GatewayModel from "./gateway.model.js"
 import DeviceModel from "./device.model.js"
 import keyRedistributionTaskModel from "./keyRedistributionTask.model.js";
+import DeviceKeyModel from "./deviceKey.model.js";
 
 import { Op, Sequelize, DataTypes } from "sequelize";
 
@@ -20,7 +21,8 @@ const db = {
     Subset: SubsetModel(sequelize, DataTypes),
     Gateway: GatewayModel(sequelize, DataTypes),
     Device: DeviceModel(sequelize, DataTypes),
-    KeyTask: keyRedistributionTaskModel(sequelize, DataTypes)
+    KeyTask: keyRedistributionTaskModel(sequelize, DataTypes) ,
+    DeviceKey : DeviceKeyModel(sequelize, DataTypes)
 }
 
 
@@ -114,6 +116,30 @@ db.KeyTask.belongsTo(db.Device,
     }
 );
 
+
+// DeviceKey relationships
+db.DeviceKey.belongsTo(db.Device,
+    {
+        foreignKey: 'deviceId',
+        as: 'device',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
+    }
+);
+db.Device.hasMany(db.DeviceKey,
+    {
+        foreignKey: 'deviceId',
+    }
+);
+
+db.DeviceKey.belongsTo(db.Device,
+    {
+        foreignKey: 'peerDeviceId',
+        as: 'peerDevice',
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
+    }
+);
 export default db;
 
 

@@ -7,6 +7,7 @@ import db from "./models/index.js";
 const { sequelize } = db;
 
 import app from './app.js';
+import { setupScheduler } from './utils/scheduled.js';
 
 dotenv.config();
 
@@ -20,7 +21,10 @@ sequelize
   .sync({ force: false })
   .then(() => {
     console.log('Database synchronized.');
-    app.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://0.0.0.0:${PORT}`)
+      setupScheduler();
+    });
   })
   .catch(err => console.error('Error starting server:', err));
 

@@ -21,15 +21,15 @@ services:
     ports:
       - "1883:1883"
     volumes:
-      - ../mosquitto/config:/mosquitto/config
-      - ../mosquitto/data:/mosquitto/data
-      - ../mosquitto/log:/mosquitto/log
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
   # -----------------------------------------------------------------------
   # 3) Service Gateway (votre application Node.js)
   # -----------------------------------------------------------------------
   gateway:
     build:
-      context: .
+      context: ./gateway
       dockerfile: Dockerfile
     image: gateway-dev
     container_name: gateway-dev
@@ -39,7 +39,7 @@ services:
     volumes:
       # 1) Mount your entire project into /usr/src/app so changes on host
       #    are reflected immediately in the container
-      - ./:/usr/src/app
+      - ./gateway:/usr/src/app
 
       # 2) Preserve container-installed node_modules (so your host's empty
       #    node_modules folder doesn't overwrite them)
@@ -55,42 +55,64 @@ services:
     # -----------------------------------------------------------------------
   # 4) Service IoT Device (Python MQTT Subscriber)
   # -----------------------------------------------------------------------
-  device_1.01:
+  device-01:
     build:
-      context: ../device
+      context: ./device
       dockerfile: Dockerfile
     image: device-dev
-    container_name: device-1.01
+    container_name: device-01
     restart: on-failure
     environment:
       - MQTT_BROKER_URL=mqtt-broker
-      - DEVICE_GUID=1.01 # Must match database registration
+      - DEVICE_GUID=LR01_device@01 # Must match database registration
       - SUBSET_IDENTIFIER=LR01 # Subset identifier  subsetIdentifier
       - PYTHONUNBUFFERED=1
     volumes:
-      - ../device:/usr/src/device # Mount device code
+      - ./device:/usr/src/device # Mount device code
     working_dir: /usr/src/device
-    command: sh -c "pip install paho-mqtt && python device_subscriber.py"
+    command: sh -c "python device_main.py"
     depends_on:
-      - mqtt-broker
+      - gateway
     networks:
       - iot-net
-  # device_1.02:
+
+  device-02:
+    build:
+      context: ./device
+      dockerfile: Dockerfile
+    image: device-dev
+    container_name: device-02
+    restart: on-failure
+    environment:
+      - MQTT_BROKER_URL=mqtt-broker
+      - DEVICE_GUID=LR01_device@02 # Must match database registration
+      - SUBSET_IDENTIFIER=LR01 # Subset identifier  subsetIdentifier
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./device:/usr/src/device # Mount device code
+    working_dir: /usr/src/device
+    command: sh -c "python device_main.py"
+    depends_on:
+      - gateway
+    networks:
+      - iot-net
+
+  # device-03:
   #   build:
-  #     context: ../device
+  #     context: ./device
   #     dockerfile: Dockerfile
   #   image: device-dev
-  #   container_name: device-1.02
+  #   container_name: device-03
   #   restart: on-failure
   #   environment:
   #     - MQTT_BROKER_URL=mqtt-broker
-  #     - DEVICE_GUID=1.02 # Must match database registration
+  #     - DEVICE_GUID=LR01_device@03 # Must match database registration
   #     - SUBSET_IDENTIFIER=LR01 # Subset identifier  subsetIdentifier
   #     - PYTHONUNBUFFERED=1
   #   volumes:
-  #     - ../device:/usr/src/device # Mount device code
+  #     - ./device:/usr/src/device # Mount device code
   #   working_dir: /usr/src/device
-  #   command: sh -c "pip install paho-mqtt && python device_subscriber.py"
+  #   command: sh -c "python device_main.py"
   #   depends_on:
   #     - mqtt-broker
   #   networks:

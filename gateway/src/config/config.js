@@ -37,3 +37,8 @@ export const SERVER_BASE_URL = process.env.SERVER_BASE_URL || 'http://172.17.0.1
 export const KEY_ENCRYPTION_PASS = process.env.KEY_ENCRYPTION_PASS || "fall-back"
 
 
+
+export const TYPE_TASK = {
+    REFRESH_PAIRWAISE_KEY: 'refresh_pairwise_keys' ,
+    SCHEDULED_PAIRWISE_KEY_REFRESH_ORCHESTRATION: 'scheduled_pairwise_key_refresh_orchestration',
+}
