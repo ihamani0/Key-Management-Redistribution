@@ -2,10 +2,13 @@ import mqtt from "mqtt";
 
 var options = {
     host: 'xxxxxxxxxxxxxxxxxxxxx.s1.eu.hivemq.cloud',
+    host: 'xxxxxxxxxxxxxxxxxxx.s1.eu.hivemq.cloud',
     port: 8883,
     protocol: 'mqtts',
     username: 'xxxxxxxxxxxxxx',
     password: 'xxxxxxxxxxxxxxxxxxxx@'
+    username: 'xxxxxxxx',
+    password: 'xxxxxxxxxxxx@'
 }
 
 // initialize the MQTT client
