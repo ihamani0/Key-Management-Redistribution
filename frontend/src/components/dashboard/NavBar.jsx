@@ -34,6 +34,10 @@ function getPageTitle(pathname) {
       return "Key Redistribution";
     case "/dashboard/monitoring":
       return "System Monitoring";
+    case "/dashboard/subaria":
+      return "Subaria Management";
+    case "/dashboard/gateway":
+      return "Gateway Management";
     default:
       return "SecureKey Manager";
   }

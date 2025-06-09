@@ -49,6 +49,7 @@ router.post(
 );
 
 router.get('/checkAuth', authMiddleware, checkAuthController)
-router.get('/logout', authMiddleware, LogoutController)
+
+router.post('/logout', authMiddleware, LogoutController)
 
 export default router;

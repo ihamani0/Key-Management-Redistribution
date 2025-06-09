@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+
 import React, { useState } from "react";
 
 // Card UI Components
@@ -34,13 +34,22 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
-export default function ScheduleCard({ devices = [], loadingDevices = true }) {
+export default function ScheduleCard({
+  onTriggerScheduleing, 
+  selectedSubaria, 
+  deviceList, 
+  loadingDevices ,
+
+}) {
+  
   const [selectedScheduleTarget, setSelectedScheduleTarget] = useState("All");
+
   const [scheduleDate, setScheduleDate] = useState(null);
   const [scheduleTime, setScheduleTime] = useState("12:00");
   const [recurrence, setRecurrence] = useState("None");
 
   // Handle form submission
+  
   const handleScheduleRedistribution = async (event) => {
     event.preventDefault();
 
@@ -56,8 +65,19 @@ export default function ScheduleCard({ devices = [], loadingDevices = true }) {
       scheduleDateTime.setHours(hours, minutes, 0, 0);
       const isoDateTime = scheduleDateTime.toISOString();
 
-      // Uncomment this when service is ready
-      // await scheduleRedistribution(selectedScheduleTarget, isoDateTime, recurrence);
+      // Only include recurrence if scheduleType is RECURRENCE
+      let scheduleType = recurrence === "None" ?  "ONCE_AT" : "RECURRENCE";
+        
+      const payload = {
+          subsetId: selectedSubaria, // from props
+          scheduleType,
+          scheduleValue: isoDateTime,
+          deviceId:  selectedScheduleTarget === "All" ? null : selectedScheduleTarget, // All devices or specific device
+          ...(scheduleType === "RECURRENCE" ? { recurrence } : {})
+      };
+
+
+      onTriggerScheduleing(payload);
 
       // Reset form fields
       setSelectedScheduleTarget("All");
@@ -65,12 +85,12 @@ export default function ScheduleCard({ devices = [], loadingDevices = true }) {
       setScheduleTime("12:00");
       setRecurrence("None");
 
-      toast.success("Task scheduled successfully!");
     } catch (error) {
       console.error("Failed to schedule redistribution:", error);
       toast.error("Failed to schedule task.");
     }
   };
+
 
   return (
     <Card className="w-full shadow-md rounded-lg">
@@ -88,7 +108,7 @@ export default function ScheduleCard({ devices = [], loadingDevices = true }) {
       {/* Content */}
       <CardContent className="p-6">
         <form onSubmit={handleScheduleRedistribution} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2  gap-4">
             {/* Target Devices */}
             <div className="space-y-2">
               <Label htmlFor="scheduleTarget">Target</Label>
@@ -97,21 +117,33 @@ export default function ScheduleCard({ devices = [], loadingDevices = true }) {
                 onValueChange={setSelectedScheduleTarget}
               >
                 <SelectTrigger id="scheduleTarget" className="w-full">
-                  <SelectValue placeholder="Select target..." />
+                      <SelectValue>
+                          {selectedScheduleTarget === "All"
+                          ? "All Devices"
+                          : deviceList.find(d => String(d.deviceId) === String(selectedScheduleTarget))
+                            ? `${deviceList.find(d => String(d.deviceId) === String(selectedScheduleTarget)).deviceName} (${deviceList.find(d => String(d.deviceId) === String(selectedScheduleTarget)).deviceGuid})`
+                            : "Select target..."}
+                      </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
+
                   <SelectItem value="All">All Devices</SelectItem>
+                  
                   {loadingDevices ? (
                     <SelectItem value="loading" disabled>
                       Loading...
                     </SelectItem>
                   ) : (
-                    devices.map((device) => (
-                      <SelectItem key={device.deviceId} value={device.deviceId}>
-                        {device.deviceName} ({device.deviceId})
+                    deviceList.map((device) => (
+                      <SelectItem 
+                      key={device.deviceId} 
+                      value={String(device.deviceId)}>
+                        {device.deviceName} ({device.deviceGuid})
                       </SelectItem>
                     ))
                   )}
+
+
                 </SelectContent>
               </Select>
             </div>
@@ -169,8 +201,8 @@ export default function ScheduleCard({ devices = [], loadingDevices = true }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="None">None</SelectItem>
-                  <SelectItem value="Daily">Daily</SelectItem>
-                  <SelectItem value="Weekly">Weekly</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -183,7 +215,10 @@ export default function ScheduleCard({ devices = [], loadingDevices = true }) {
               disabled={loadingDevices}
               className="w-full sm:w-auto"
             >
-              <PlusCircle className="mr-2 h-4 w-4" /> Schedule Task
+              <PlusCircle className="mr-2 h-4 w-4" /> 
+              {
+                loadingDevices ? "Scheduling..." : "Schedule Redistribution"
+              }
             </Button>
           </div>
         </form>

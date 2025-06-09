@@ -2,13 +2,16 @@ import express from "express";
 
 //import COntroller
 
-import { register, getDeviceByGuid, getAllDevices, provision, updateDeviceStatus, revokeDevice, refreshDevicePairwiseKeys } from "../controllers/device.controller.js";
+import { register, getDeviceByGuid, getAllDevices, provision, updateDeviceStatus, revokeDevice, refreshDevicePairwiseKeys ,deleteDevice, getDevicesBySubset} from "../controllers/device.controller.js";
 import authMiddlware from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 
-router.get('/getAll', authMiddlware, getAllDevices);
+router.get('/all', authMiddlware, getAllDevices);
+router.post('/create', authMiddlware, register);
+router.delete("/:id/delete" , authMiddlware, deleteDevice);
+
 
 router.get('/:deviceGuid/get', authMiddlware, getDeviceByGuid);
 
@@ -25,8 +28,8 @@ router.post("/:deviceGuid/refresh-pairwise", authMiddlware, refreshDevicePairwis
 router.patch('/:deviceGuid', updateDeviceStatus);
 
 
-
-router.post('/register', authMiddlware, register);
+//fetech device by subaria
+router.get('/:subsetId/subset', authMiddlware , getDevicesBySubset);
 
 
 

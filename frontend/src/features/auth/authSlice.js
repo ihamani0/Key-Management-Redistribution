@@ -1,15 +1,14 @@
 /* eslint-disable no-unused-vars */
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { checkAuthAPI, loginAPI, logoutAPI } from "./authApi";
+import { login, logout, Authcheck } from "../../Service/auth.service.js";
 
 //middlware
 export const loginUser = createAsyncThunk(
   "auth/login-user",
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await loginAPI(credentials);
+      return await login(credentials);
 
-      return response;  
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -20,8 +19,7 @@ export const logoutUser = createAsyncThunk(
   "auth/logout-user",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await logoutAPI();
-      return response; 
+      return await logout();
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -32,8 +30,7 @@ export const checkAuth = createAsyncThunk(
   "auth/check-auth",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await checkAuthAPI();
-      return response;  
+      return await Authcheck();
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -88,22 +85,25 @@ const authSlice = createSlice({
         state.isAuth = false;
         state.user = null;
       })
-      .addCase(logoutUser.pending,(state,action)=>{
+      .addCase(logoutUser.pending, (state, action) => {
         state.isAuthLoading = true;
         state.error = ""; // Clear error on new attempt
       })
-      .addCase(logoutUser.fulfilled,(state,action)=>{
+      .addCase(logoutUser.fulfilled, (state, action) => {
         state.user = null;
         state.isAuth = false;
         state.error = "";
         state.isAuthLoading = false;
       })
-      .addCase(logoutUser.rejected,(state,action)=>{
+      .addCase(logoutUser.rejected, (state, action) => {
         state.isAuthLoading = false;
         state.error = action.payload || "Login failed";
       })
   },
 });
+
+
+
 
 //getters
 

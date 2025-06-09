@@ -18,11 +18,18 @@ import Devices from "./features/dashboard/devices/Devices";
 import DashboardHome from "./features/dashboard/DashboardHome";
 import Redistribution from "./features/dashboard/redistribution/Redistribution";
 
-import MonitoringDashboard from "./features/dashboard/monitor/MonitoringDashboard";
+import Monitoring from "./features/dashboard/monitor/Monitoring";
+import Subarias from "./features/dashboard/subaria/Subarias";
+import Gateways from "./features/dashboard/gateway/Gateways";
+import LandingPage from "./pages/LandingPage";
+
+
+// import ReactFlow from "./features/dashboard/SystemFlowChart";
 
 function App() {
   const isAuthLoading = useSelector(selecteIsAuthLoading);
   const dispatch = useDispatch();
+
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
@@ -46,16 +53,25 @@ function App() {
           element: <DashboardHome />,
         },
         {
+          path: "subaria",
+          element: <Subarias />,
+        },
+        {
+          path: "gateway",
+          element: <Gateways />,
+        },
+        {
           path: "devices",
           element: <Devices />,
         },
+
         {
-          path: "redistribution",
+          path: "key-management",
           element: <Redistribution />,
         },
         {
           path: "monitoring",
-          element: <MonitoringDashboard />,
+          element: <Monitoring/>,
         },
       ],
     },
@@ -72,9 +88,10 @@ function App() {
       element: <NotFoundPage />,
     },
     {
-      path: "/logout",
-      element: <Logout />,
+      path: "/landing-page",
+      element: <LandingPage />,
     },
+
   ]);
 
   return isAuthLoading ? <Spinner /> : <RouterProvider router={router} />;

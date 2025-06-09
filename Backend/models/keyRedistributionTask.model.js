@@ -59,6 +59,14 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.DATE,
             field: 'completed_at'
         },
+        recurrence: {
+            type: DataTypes.DATE,
+            field: 'recurrence'
+        },
+        nextRunAt: {
+            type: DataTypes.STRING(255),
+            field: 'next_run_at'
+        },
 
     }, {
         tableName: 'key_redistribution_tasks',

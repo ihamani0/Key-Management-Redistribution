@@ -59,13 +59,41 @@ export const setupScheduler = () => {
             where: {
                 status: 'scheduled',
                 scheduledAt: { [Op.lte]: now },
-                taskType: 'scheduled_pairwise_key_refresh_orchestration'
+                taskType: 'scheduled'
             },
             order: [['scheduledAt', 'ASC']]
         });
 
         for (const task of pendingTasks) {
             await processScheduledTask(task);
+        }
+
+        // Handle recurring tasks
+        const pendingRecurringTasks = await KeyTask.findAll({
+            where: {
+                status: 'scheduled',
+                scheduledAt: { [Op.lte]: now },
+                taskType: 'recurring'
+            },
+            order: [['scheduledAt', 'ASC']]
+        });
+
+        for (const task of pendingRecurringTasks) {
+            await processScheduledTask(task);
+
+            let nextRun = new Date(task.scheduledAt);
+            if (task.recurrence === 'weekly') {
+                nextRun.setDate(nextRun.getDate() + 7);
+            } else if (task.recurrence === 'monthly') {
+                nextRun.setMonth(nextRun.getMonth() + 1);
+            }else {
+                continue; // Unknown recurrence, skip
+            }
+
+            await KeyTask.update(
+                { scheduledAt: nextRun, status: 'scheduled' },
+                { where: { taskId: task.taskId } }
+            );
         }
     });
     console.log("Scheduler started. Checking tasks every minute.");

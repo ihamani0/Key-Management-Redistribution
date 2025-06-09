@@ -10,6 +10,7 @@ const { Gateway, Subset, Device, KeyTask, Op, DeviceKey } = db;
 
 export const register = expressAsyncHandler(async (req, res) => {
 
+
     const {
         deviceName,
         subsetId,
@@ -66,15 +67,43 @@ export const register = expressAsyncHandler(async (req, res) => {
 
     res.status(201).json({
         message: 'Device registered successfully',
-        device: {
+        data : {
+            deviceId: newDeviceRegister.deviceId,
             deviceGuid: newDeviceRegister.deviceGuid,
-            status: newDeviceRegister.status,
-            registeredAt: newDeviceRegister.createdAt
+            deviceName: newDeviceRegister.deviceName,
+            subsetId: newDeviceRegister.subsetId,
+            localIdentifierInSubset: newDeviceRegister.localIdentifierInSubset,
+            deviceType: newDeviceRegister.deviceType,
+            securityParameterAlpha: newDeviceRegister.securityParameterAlpha
         }
     });
 });
 
 
+export const deleteDevice = expressAsyncHandler(async (req, res) => {
+    const {id} = req.params;
+
+    if(!id){
+        const error = new Error("local Identifier for Device  are required!");
+        error.status = "fail";
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const device = await Device.findByPk(id);
+    if (!device) {
+        const error = new Error("Device not found.");
+        error.status = "NotFound";
+        error.statusCode = 404;
+        throw error;
+    }
+    // Delete the device
+    device.destroy()
+
+    res.status(200).json({
+        message: 'Device deleted successfully',
+    });
+})
 
 export const getDeviceByGuid = expressAsyncHandler(async (req, res) => {
     const { deviceGuid } = req.params;
@@ -137,12 +166,34 @@ export const getAllDevices = expressAsyncHandler(async (_, res) => {
     // devices will be [] if none found (not null)
     res.status(200).json({
         message: 'success',
-        devices
+        data : devices
     });
 
 });
 
 
+// Get devices by subset
+export const getDevicesBySubset = expressAsyncHandler(async (req, res) => {
+    const { subsetId } = req.params;
+    if (!subsetId) { 
+        const error = new Error("Subset ID is required.");
+        error.status = "fail";
+        error.statusCode = 400;
+        throw error;
+
+    }
+    
+    const devices = await Device.findAll({
+        where: { subsetId },
+        attributes : ['deviceId' , 'deviceGuid', 'deviceName' , 'status']
+    })
+
+
+    res.status(200).json({
+        data : devices
+    })
+
+});
 
 export const updateDeviceStatus = expressAsyncHandler(async (req, res) => {
     const { status } = req.body;
@@ -251,18 +302,6 @@ export const provision = expressAsyncHandler(async (req, res) => {
         }
     }
 
-    // get Key session between server <--> gateway corresponding to subset
-    // const getewayId = device.subset.gateways[0].gatewayGuid
-
-    // const sessionKey = sessionService.getSessionKey(getewayId);
-
-
-    // if (!sessionKey) {
-    //     const err = new Error(`Session Key Not Found , Try Establsh Session 'gateway with server' And Try Again`);
-    //     err.status = "NotFound";
-    //     err.statusCode = 404;
-    //     throw err;
-    // }
 
 
 
@@ -272,7 +311,7 @@ export const provision = expressAsyncHandler(async (req, res) => {
     //creating Task in database so each gateway get hes Task 
 
     const task = await KeyTask.create({
-        taskType: 'provision_evkms_device',
+        taskType: 'provision',
         targetDeviceId: device.deviceId,
         targetGatewayId: device.subset.gateways[0].id,
         initiatedByUserId: adminUserId,
@@ -288,7 +327,7 @@ export const provision = expressAsyncHandler(async (req, res) => {
 
     res.status(202).json({
         message: `Provisioning task created for device ${deviceGuid}`,
-        taskId: task.taskId
+        data: task
     });
 })
 
@@ -466,7 +505,7 @@ export const revokeDevice = expressAsyncHandler(async (req, res) => {
 
 
     await KeyTask.create({
-        taskType: 'process_device_revocation',
+        taskType: 'revocation',
         targetGatewayId: deviceToRevoke.subset.gateways[0].id, // Task assigned to this gateway
         targetSubsetId: deviceToRevoke.subset.id, // Subset where the device was revoked
         initiatedByUserId: adminUserId,
@@ -619,7 +658,7 @@ export const refreshDevicePairwiseKeys = expressAsyncHandler(async (req, res) =>
 
         // Create a task for the primary gateway
         const newTask = await KeyTask.create({
-            taskType: 'refresh_pairwise_keys',
+            taskType: 'refresh',
             targetDeviceId: affectedDevice.deviceId,
             targetGatewayId: responsibleGateway.id,
             targetSubsetId: affectedDevice.subset.id,
@@ -649,10 +688,11 @@ export const refreshDevicePairwiseKeys = expressAsyncHandler(async (req, res) =>
 
 
 
-    res.status(202).json({
-        message: involvedKeyRecords.length === 0
+    res.status(201).json({
+        message:  involvedKeyRecords.length === 0
             ? `Standalone refresh initiated for ${deviceGuid} (no peers found)`
-            : `Key refresh initiated for ${affectedDevices.length} devices`,
+            : `Key refresh initiated for ${affectedDevices.length} devices`
+        ,
         totalDevicesAffected: affectedDevices.length,
         tasksCreated: refreshTasksCreated,
         hadPeers: involvedKeyRecords.length > 0
@@ -704,7 +744,7 @@ export const initiatePairwiseKeyRefreshForDevices = async (
         const encryptedPayload = cryptoService.encryptForDatabase(JSON.stringify(refreshPayload));
 
         const newTask = await KeyTask.create({
-            taskType: 'refresh_pairwise_keys',
+            taskType: 'refresh',
             targetDeviceId: device.deviceId,
             targetGatewayId: gateway.id,
             targetSubsetId: device.subset.id,

@@ -7,11 +7,14 @@ import authMiddleware from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.get('/getAll', authMiddleware, getAllTask);
+router.get('/all', authMiddleware, getAllTask);
+
+
+
+router.post("/schedule", authMiddleware, scheduleKeyRefresh);
+
 
 router.patch('/:taskId', updateTask);
 
-
-router.post("/schedule-key-refresh", authMiddleware, scheduleKeyRefresh);
 
 export default router; 

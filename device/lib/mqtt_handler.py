@@ -161,7 +161,7 @@ def handle_discovery(client, msg):
         
         log_discovery(f"Received discovery from {source_guid}")
 
-
+        # 1- Calculate Digest and  Verify Digset
         # Extract neighbor's local ID
         neighbor_local_id = source_guid.split("@")[-1]
         
@@ -181,7 +181,7 @@ def handle_discovery(client, msg):
             log_error(f"Discovery digest mismatch from {source_guid}")
             return
         
-        # Compute pairwise key
+        #2- Compute pairwise key
         pairwise_key = device.compute_pairwise_key(source_guid, neighbor_secret_s_source, nonce)
 
 

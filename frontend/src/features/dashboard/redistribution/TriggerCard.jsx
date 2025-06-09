@@ -34,41 +34,33 @@ import { Send } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-function TriggerCard({ devices, loadingDevices }) {
-  const [selectedManualTarget, setSelectedManualTarget] = useState("All");
+function TriggerCard(
+{ 
+  selectedSubaria,
+  //
+  onTriggerRedistribution, // Function to handle redistribution trigger
+  //devices 
+  deviceList,
+  loadingDevices,
+  selectedDevice,
+  setSelectedDevice,
+  provising
+}
 
-  const [isTriggerConfirmOpen, setIsTriggerConfirmOpen] = useState(false);
+) {
+  
+  const [isTriggerConfirmOpen , setIsTriggerConfirmOpen] = useState(false);
 
-  // Trigger manual redistribution
-  const handleTriggerRedistribution = async () => {
-    setIsTriggerConfirmOpen(false); // Close dialog
-    try {
-      //   await triggerRedistribution(selectedManualTarget);
-      //   toast({ title: "Success", description: "Key redistribution triggered." });
 
-      toast.success("Success", {
-        description: "Trigger key for device",
-        duration: 6000,
-        action: {
-          label: "undo",
-          className: "text-red-500 hover:text-red-700",
-        },
-      });
 
-      //   // Refresh history
-      //   const updatedHistory = await fetchRedistributionHistory();
-      //   setHistory(updatedHistory);
-    } catch (error) {
-      //   console.error("Trigger failed:", error);
-      //   toast({ title: "Error", description: "Failed to trigger redistribution.", variant: "destructive" });
-      toast("Error", {
-        description: "Failed to trigger redistribution.",
-        action: {
-          label: "Undo",
-        },
-      });
+  const handleTriggerRedistribution = ()=>{
+    if(!selectedDevice || selectedDevice === "All") {
+      toast.error("Please select a target device.");
+      return;
     }
-  };
+    setIsTriggerConfirmOpen(false);
+    onTriggerRedistribution(selectedDevice);
+  }
 
   return (
     <Card>
@@ -76,19 +68,22 @@ function TriggerCard({ devices, loadingDevices }) {
         <CardTitle className='flex items-center gap-2'>
           <Send className="mr-2 inline-block h-5 w-5" />{" "}
           <span className="text-2xl font-bold">
-            Manual Key Redistribution
+            Manual Key Distribution
           </span>
         </CardTitle>
-        <CardDescription>Trigger redistribution now.</CardDescription>
+        <CardDescription>Provision now.</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-end">
+        <div className="flex flex-col gap-4 items-end">
+          
+
           <div className="w-full space-y-2">
             <Label htmlFor="manualTarget">Target Devices</Label>
             <Select
-              value={selectedManualTarget}
-              onValueChange={setSelectedManualTarget}
+              value={selectedDevice}
+              onValueChange={setSelectedDevice}
+              disabled={selectedSubaria ? false : true}
             >
               <SelectTrigger id="manualTarget" className="w-full">
                 <SelectValue placeholder="Select target..." />
@@ -101,34 +96,34 @@ function TriggerCard({ devices, loadingDevices }) {
                     Loading...
                   </SelectItem>
                 ) : (
-                  devices.map((device) => (
-                    <SelectItem key={device.deviceId} value={device.deviceId}>
-                      {device.deviceName} ({device.deviceId})
+                  deviceList.map((device) => (
+                    <SelectItem key={device.deviceGuid} value={device.deviceGuid}>
+                      {device.deviceName}{" "}--{" "}({device.deviceGuid})
                     </SelectItem>
                   ))
                 )}
               </SelectContent>
             </Select>
-          </div>
+          </div> 
 
           <AlertDialog
             open={isTriggerConfirmOpen}
             onOpenChange={setIsTriggerConfirmOpen}
           >
             <AlertDialogTrigger asChild>
-              <Button disabled={loadingDevices}>
-                <Send className="mr-2 h-4 w-4" /> Trigger Now
+              <Button disabled={provising}>
+                <Send className="mr-2 h-4 w-4" /> Provision Dev Now
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Confirm Trigger</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to trigger redistribution for{" "}
+                  Are you sure you want to trigger provision for Device {" "}
                   <strong>
-                    {selectedManualTarget === "All"
+                    {selectedDevice === "All"
                       ? "All Devices"
-                      : selectedManualTarget}
+                      : selectedDevice}
                   </strong>
                   ?
                 </AlertDialogDescription>
@@ -140,7 +135,7 @@ function TriggerCard({ devices, loadingDevices }) {
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-          </AlertDialog>
+          </AlertDialog> 
         </div>
       </CardContent>
     </Card>

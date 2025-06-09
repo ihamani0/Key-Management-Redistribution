@@ -48,16 +48,8 @@ export default (sequelize, DataTypes) => {
             defaultValue: 'active', //Status of the key (active/expired/revoked).
             field: 'key_status'
         },
-        // validFrom: {
-        //     type: DataTypes.DATE,
-        //     defaultValue: DataTypes.NOW,
-        //     field: 'valid_from'  //Timestamp when the key becomes valid.
-        // },
-        // validUntil: {
-        //     type: DataTypes.DATE,
-        //     field: 'valid_until' //Timestamp when the key expires.
-        // },
-
-        // Add unique indexes later if needed for composite keys
-    })
+        
+    } ,  {
+            tableName: 'device_keys',
+        })
 }

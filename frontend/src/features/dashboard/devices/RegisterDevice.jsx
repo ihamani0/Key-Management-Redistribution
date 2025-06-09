@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// RegisterDevice.jsx
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogClose,
@@ -9,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import {
   Select,
   SelectContent,
@@ -17,41 +17,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
- 
-
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
-// import { useToast } from "@/hooks/use-toast";
-
-function RegisterDevice() {
+function RegisterDevice({ onRegister, subariaOptions , creating }) {
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
-
   const [newDevice, setNewDevice] = useState({
-    deviceId: "",
+    localIdentifierInSubset: "",
     deviceName: "",
     deviceType: "",
-    gatwayId: "",
+    subsetId: ""
   });
-
-  //   Placeholder handler for registering a new device
 
   const handleRegisterDevice = async (event) => {
     event.preventDefault();
-    console.log("Registering device:", newDevice);
-    // TODO: Add validation before calling API
+      
+    if (onRegister) onRegister(newDevice);
+
+
     try {
       toast(`Device ${newDevice.deviceName} registered successfully.`);
+      setNewDevice({
+        localIdentifierInSubset: "",
+        deviceName: "",
+        deviceType: "",
+        subsetId: ""
+      });
+      setIsRegisterDialogOpen(false);
     } catch (error) {
       console.error("Failed to register device:", error);
       toast("Failed to register the device.");
     }
   };
 
+
+  
   return (
     <Dialog open={isRegisterDialogOpen} onOpenChange={setIsRegisterDialogOpen}>
       <DialogTrigger asChild>
@@ -61,51 +64,28 @@ function RegisterDevice() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Register New IoT Device</DialogTitle>
+          <DialogTitle>Register New Device</DialogTitle>
           <DialogDescription>
-            Enter the details for the new device. Click save when you're done.
+            Enter the device details. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-
         <form onSubmit={handleRegisterDevice}>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-1 items-center gap-4">
               <Label htmlFor="deviceId" className="text-right">
-                Device ID
+                local Identifier In Subset (must be unique)
               </Label>
               <Input
                 id="deviceId"
                 value={newDevice.deviceId}
                 onChange={(e) =>
-                  setNewDevice({ ...newDevice, deviceId: e.target.value })
+                  setNewDevice({ ...newDevice, localIdentifierInSubset: e.target.value })
                 }
                 className="col-span-3"
                 required
               />
             </div>
-
-            <div className="grid grid-cols-2  gap-4">
-              <Label htmlFor="deviceId" className="text-right">
-                Gatway
-              </Label>
-              <Select
-                onValueChange={(value) =>
-                  setNewDevice({ ...newDevice, gatwayId: value })
-                }
-                value={newDevice.gatwayId}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Gatway" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GA">Gatway-A</SelectItem>
-                  <SelectItem value="GB">Gatway-B</SelectItem>
-                  <SelectItem value="GC">Gatway-C</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-1 items-center gap-4">
               <Label htmlFor="deviceName" className="text-right">
                 Device Name
               </Label>
@@ -119,7 +99,7 @@ function RegisterDevice() {
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-1 items-center gap-4">
               <Label htmlFor="deviceType" className="text-right">
                 Device Type
               </Label>
@@ -134,6 +114,26 @@ function RegisterDevice() {
                 required
               />
             </div>
+            <div className="grid grid-cols-1 items-center gap-4">
+              <Label htmlFor="subariaId" className="text-right">
+                Subaria ID
+              </Label>
+              <Select
+                onValueChange={(value) => setNewDevice({ ...newDevice, subsetId: value })}
+                value={newDevice.subsetId}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select Subaria ID" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subariaOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -141,7 +141,9 @@ function RegisterDevice() {
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit">Save Device</Button>
+            <Button type="submit"
+              disabled={creating}
+            >{creating ? "...Saving" :"Save Device"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

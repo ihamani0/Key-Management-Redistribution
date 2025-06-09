@@ -169,6 +169,34 @@ export const getAll = expressAsyncHandler(async (req, res) => {
 
 
 
+export const deleteGateway = expressAsyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
+        const error = new Error("Missing gateway ID.");
+        error.status = "fail";
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Check if the gateway exists
+    const gateway = await Gateway.findByPk(id);
+
+    if (!gateway) {
+        const error = new Error("Gateway not found.");
+        error.status = "NotFound";
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Delete the gateway
+    await gateway.destroy();
+
+    res.status(200).json({
+        message: `Gateway with ID ${id} deleted successfully.`
+    });
+});
+
 
 
 // Gateway Polls for Tasks 
@@ -225,5 +253,7 @@ export const getGatewayTask = expressAsyncHandler(async (req, res) => {
         tasks: processedTasks
     });
 })
+
+
 
 

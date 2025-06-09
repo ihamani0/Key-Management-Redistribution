@@ -187,10 +187,13 @@ export default class Gateway {
     handleDeviceStatusMessage(payload, deviceGuid) {
         if (payload.status_type === 'provisioned' && payload.taskId) {
             logInfo(`📱 Device ${deviceGuid} provisioned successfully (Task: ${payload.taskId})`);
-            this.updateServerTaskStatusInternal(payload.taskId, 'completed_ack_received');
+
+            this.updateServerTaskStatusInternal(payload.taskId, 'completed');
+
             this.updateServerDeviceStatus(deviceGuid, 'active');
 
         } else if (payload.status_type === 'pairwise_key_established') {
+
             logInfo(`🔐 Pairwise key established: ${deviceGuid} ↔ ${payload.peerDeviceGuid}`);
             this.reportPairwiseKeyToServer(payload);
 
@@ -199,7 +202,7 @@ export default class Gateway {
             logInfo(`🔄 Device ${deviceGuid} ACKed pairwise key refresh (Task: ${payload.taskId})`);
 
             // 1. Update the task status on server
-            this.updateServerTaskStatusInternal(payload.taskId, 'completed_refresh_ack_received');
+            this.updateServerTaskStatusInternal(payload.taskId, 'completed');
             // 2. Update DeviceKey records on server
             this.reportPairwiseKeyRefreshToServer(payload);
             // 3. Update device status back to 'running'
@@ -211,7 +214,7 @@ export default class Gateway {
             logInfo(`⏱ Device ${deviceGuid} completed scheduled key refresh (Task: ${payload.taskId})`);
 
             // 1. Update task status
-            this.updateServerTaskStatusInternal(payload.taskId, 'device_refresh_completed');
+            this.updateServerTaskStatusInternal(payload.taskId, 'completed');
 
             // 2. Update device status
             this.updateServerDeviceStatus(deviceGuid, 'running');
@@ -377,20 +380,24 @@ export default class Gateway {
         payload.taskId = task.taskId;
 
 
-        if (task.taskType === 'provision_evkms_device' && task.device) {
+        if (task.taskType === TYPE_TASK.PROVISION 
+                             && task.device) {
+
             logTask(`📱 Provisioning device: ${task.device.deviceGuid} (Task: ${task.taskId})`);
             this.publishProvisioningToDevice(task.device.deviceGuid, payload);
 
-        } else if (task.taskType === 'process_device_revocation') {
+        } else if (task.taskType === TYPE_TASK.REVOCATION) {
+
             logTask(`🚫 Processing revocation: ${payload.revokedDeviceGuid} (Task: ${task.taskId})`);
+
             await this.handleDeviceRevocation(payload);
             await this.updateServerTaskStatusInternal(task.taskId, 'gateway_processing_revocation');
 
-        } else if (task.taskType === TYPE_TASK.REFRESH_PAIRWAISE_KEY) {
+        } else if (task.taskType === TYPE_TASK.REFRESH) {
             logTask(`🔄 Processing pairwise key refresh for device: ${task.device.deviceGuid} (Task: ${task.taskId})`);
             await this.handlePairwiseKeyRefresh(payload, task.device.deviceGuid);
             await this.updateServerTaskStatusInternal(task.taskId, 'refresh_command_sent');
-        } else if (task.taskType === TYPE_TASK.SCHEDULED_PAIRWISE_KEY_REFRESH_ORCHESTRATION) {
+        } else if (task.taskType === TYPE_TASK.SCHEDULED) {
 
             logTask(`⏱ Processing scheduled refresh orchestration (Task: ${task.taskId})`);
             // Just acknowledge - actual processing is server-side
@@ -428,7 +435,7 @@ export default class Gateway {
             (err) => {
                 if (err) {
                     logError(`Failed to broadcast key refresh: ${err.message}`);
-                    this.updateServerTaskStatusInternal(taskId, 'broadcast_failed');
+                    this.updateServerTaskStatusInternal(taskId, 'failed');
                 } else {
                     logInfo(`Key refresh broadcasted to subset ${subsetIdentifier}`);
                     this.updateServerTaskStatusInternal(taskId, 'broadcast_refresh_sent');
@@ -439,6 +446,7 @@ export default class Gateway {
 
     }
 
+    
     async handleDeviceRevocation(revocationPayload) {
         const { revokedDeviceGuid, revokedDeviceSubsetId, taskId } = revocationPayload;
 
@@ -463,7 +471,7 @@ export default class Gateway {
             (err) => {
                 if (err) {
                     logError(`Failed to broadcast revocation alert: ${err.message}`);
-                    this.updateServerTaskStatusInternal(taskId, 'failed_revocation_broadcast');
+                    this.updateServerTaskStatusInternal(taskId, 'failed');
                 } else {
                     logInfo(`Revocation alert broadcasted for ${revokedDeviceGuid}`);
                     this.updateServerTaskStatusInternal(taskId, 'revocation_alert_sent');
@@ -482,6 +490,7 @@ export default class Gateway {
             async (err) => {
                 if (err) {
                     logError(`Failed to publish provisioning to ${deviceGuid}: ${err.message}`);
+                    await this.updateServerTaskStatusInternal(payloadWithTaskId.taskId, 'failed');
                 } else {
                     logInfo(`Provisioning payload sent to ${deviceGuid}`);
                     await this.updateServerTaskStatusInternal(payloadWithTaskId.taskId, 'in_progress_payload_sent');
@@ -525,7 +534,7 @@ export default class Gateway {
             (err) => {
                 if (err) {
                     logError(`Failed to publish pairwise key refresh command to ${DeviceGuidFromServer}: ${err.message}`);
-                    this.updateServerTaskStatusInternal(taskId, 'failed_refresh_command_publish');
+                    this.updateServerTaskStatusInternal(taskId, 'failed');
                 } else {
                     logInfo(`Pairwise key refresh command sent to ${DeviceGuidFromServer}. Task: ${taskId}`);
                     // Await device ACK, then update task status to completed/failed

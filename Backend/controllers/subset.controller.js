@@ -55,3 +55,32 @@ export const retriveAll = expressAsyncHandler(async (req, res) => {
     });
 })
 
+export const deleteSubset = expressAsyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
+        const error = new Error("Subset ID is required!");
+        error.status = "fail";
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Find the subset by ID
+    const subset = await Subset.findByPk(id);
+
+    if (!subset) {
+        const error = new Error("Subset not found.");
+        error.status = "notFound";
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Delete the subset
+    await subset.destroy();
+
+    res.status(200).json({
+        message: "Subset deleted successfully!",
+    });
+}   
+
+);

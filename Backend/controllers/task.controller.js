@@ -25,13 +25,14 @@ export const getAllTask = expressAsyncHandler(async (req, res) => {
                 model: Gateway,
                 as: 'gateway',
             }
-        ]
+        ],
+        order:[['created_at', 'ASC']]
     });
 
     // tasks will be [] if none found (not null)
     res.status(200).json({
         message: 'success',
-        tasks
+        data : tasks
     });
 })
 
@@ -63,7 +64,9 @@ export const updateTask = expressAsyncHandler(async (req, res) => {
 
 export const scheduleKeyRefresh = expressAsyncHandler(async (req, res) => {
 
-    const { subsetId, scheduleType, scheduleValue } = req.body;
+    const { subsetId, scheduleType, scheduleValue, recurrence, deviceId } = req.body;
+
+
     const adminUserId = req.user.id;
 
     if (!subsetId || !scheduleType) {
@@ -75,6 +78,7 @@ export const scheduleKeyRefresh = expressAsyncHandler(async (req, res) => {
 
 
     const targetSubset = await Subset.findByPk(subsetId);
+
     if (!targetSubset) {
         const error = new Error(`Subset with ID ${subsetId} not found.`);
         error.status = "NotFound";
@@ -84,66 +88,109 @@ export const scheduleKeyRefresh = expressAsyncHandler(async (req, res) => {
 
 
 
-    let scheduledAt;
+
     const now = new Date();
 
-    if (scheduleType === 'ONCE_NOW') {
 
+    if (scheduleType === 'ONCE_AT' && scheduleValue) {
 
-        scheduledAt = now;
+        const scheduledAt = new Date(scheduleValue);
 
-
-    } else if (scheduleType === 'ONCE_AT' && scheduleValue) {
-
-        scheduledAt = new Date(scheduleValue);
-
-        if (isNaN(scheduledAt.getTime())) {
-            const error = new Error("Invalid scheduleValue for ONCE_AT.");
-            error.status = "fail";
-            error.statusCode = 400;
-            throw error;
+        if (isNaN(scheduledAt.getTime()) || scheduledAt < now) {
+            throw new Error("Invalid or past scheduleValue for ONCE_AT.");
         }
 
-        if (scheduledAt < now) {
-            const error = new Error("Scheduled date cannot be in the past.");
-            error.status = "fail";
-            error.statusCode = 400;
-            throw error;
+         // Helper to create the task
+        const createTask = async (devId) => {
+            const uniqueRefreshNonce = cryptoService.generateSymmetricKey(16);
+            const scheduledTaskPayload = {
+                scheduleType,
+                scheduleValue,
+                refreshNonce: uniqueRefreshNonce,
+                targetSubsetIdentifier: targetSubset.subsetIdentifier
+            };
+            const encryptedPayload = cryptoService.encryptForDatabase(JSON.stringify(scheduledTaskPayload));
+            return KeyTask.create({
+                taskType: 'scheduled',
+                targetSubsetId: subsetId,
+                targetDeviceId: devId,
+                initiatedByUserId: adminUserId,
+                status: 'scheduled',
+                scheduledAt,
+                recurrence: null,
+                payload: encryptedPayload,
+                resultMessage: `Scheduled for ${scheduledAt.toISOString()}`
+            });
+        };
+
+
+        // If deviceId is provided, schedule for that device only
+        if (deviceId) {
+            await createTask(deviceId);
+        }else{
+            const devices = await Device.findAll({ where: { subsetId } });
+            for (const device of devices) {
+                await createTask(device.deviceId);
+            }
         }
 
-    } else {
-        const error = new Error(`Unsupported schedule type: ${scheduleType}.`);
-        error.status = "fail";
-        error.statusCode = 400;
-        throw error;
+        return res.status(202).json({
+            message: `Key refresh scheduled (ONCE_AT) for ${deviceId ? 'device' : 'all devices'}`
+        });
+
+    } 
+
+
+    // Handle RECURRENCE (weekly/monthly)
+    if (scheduleType === 'RECURRENCE' && recurrence && (recurrence === 'weekly' || recurrence === 'monthly') && scheduleValue) {
+        const scheduledAt = new Date(scheduleValue);
+        if (isNaN(scheduledAt.getTime()) || scheduledAt < now) {
+            throw new Error("Invalid or past scheduleValue for recurrence.");
+        }
+
+        // Helper to create the recurring task
+        const createRecurringTask = async (devId) => {
+            const uniqueRefreshNonce = cryptoService.generateSymmetricKey(16);
+            const scheduledTaskPayload = {
+                scheduleType,
+                scheduleValue,
+                recurrence,
+                refreshNonce: uniqueRefreshNonce,
+                targetSubsetIdentifier: targetSubset.subsetIdentifier
+            };
+            const encryptedPayload = cryptoService.encryptForDatabase(JSON.stringify(scheduledTaskPayload));
+            return KeyTask.create({
+                taskType: 'recurring',
+                targetSubsetId: subsetId,
+                targetDeviceId: devId,
+                initiatedByUserId: adminUserId,
+                status: 'scheduled',
+                scheduledAt,
+                recurrence,
+                payload: encryptedPayload,
+                resultMessage: `Recurring (${recurrence}) scheduled for ${scheduledAt.toISOString()}`
+            });
+        };
+
+        if (deviceId) {
+            await createRecurringTask(deviceId);
+        } else {
+            const devices = await Device.findAll({ where: { subsetId } });
+            for (const device of devices) {
+                await createRecurringTask(device.deviceId);
+            }
+        }
+
+        return res.status(202).json({
+            message: `Recurring key refresh scheduled (${recurrence}) for ${deviceId ? 'device' : 'all devices'}`
+        });
     }
 
 
+    const error = new Error(`Unsupported schedule type: ${scheduleType}.`);
+    error.status = "fail";
+    error.statusCode = 400;
+    throw error;
+    
 
-    const uniqueRefreshNonce = cryptoService.generateSymmetricKey(16);
-
-    const scheduledTaskPayload = {
-        scheduleType: scheduleType,
-        scheduleValue: scheduleValue,
-        refreshNonce: uniqueRefreshNonce,
-        targetSubsetIdentifier: targetSubset.subsetIdentifier
-    };
-
-    const encryptedPayload = cryptoService.encryptForDatabase(JSON.stringify(scheduledTaskPayload));
-
-    const newTask = await KeyTask.create({
-        taskType: 'scheduled_pairwise_key_refresh_orchestration',
-        targetSubsetId: subsetId,
-        initiatedByUserId: adminUserId,
-        status: 'scheduled',
-        scheduledAt: scheduledAt,
-        payload: encryptedPayload,
-        resultMessage: `Scheduled for ${scheduledAt.toISOString()}`
-    });
-
-    res.status(202).json({
-        message: `Key refresh scheduled for subset ${targetSubset.subsetIdentifier}`,
-        taskId: newTask.taskId,
-        scheduledAt: newTask.scheduledAt
-    });
 })

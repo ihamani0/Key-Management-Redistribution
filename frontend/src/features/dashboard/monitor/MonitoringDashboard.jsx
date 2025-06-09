@@ -1,5 +1,5 @@
 // src/pages/MonitoringDashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 // You would import actual shadcn/ui components here if set up
 // import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 // import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';

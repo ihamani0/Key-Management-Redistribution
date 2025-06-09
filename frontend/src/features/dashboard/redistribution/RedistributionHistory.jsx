@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+
 import {
   Card,
   CardContent,
@@ -14,84 +14,77 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { History } from "lucide-react"; // Added import for the History icon
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
-// Mock function to simulate API delay
-const fetchMockHistory = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          taskId: "TASK-001",
-          status: "Success",
-          target: "All",
-          timestamp: new Date().toISOString(),
-        },
-        {
-          taskId: "TASK-002",
-          status: "Pending",
-          target: "D12345",
-          timestamp: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-        },
-        {
-          taskId: "TASK-003",
-          status: "Failed",
-          target: "D67890",
-          timestamp: new Date(Date.now() - 2 * 86400000).toISOString(), // Two days ago
-        },
-      ]);
-    }, 1500); // Simulate 1.5s network delay
-  });
-};
 
-export default function RedistributionHistory() {
-  const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(true);
+import { Eye, History } from "lucide-react"; // Added import for the History icon
+import StatusBadge from "@/ui/StatusBadge";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import SearchBar from "@/ui/SearchBar";
 
-  useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        const data = await fetchMockHistory();
-        setHistory(data);
-      } catch (error) {
-        console.error("Failed to load history:", error);
-      } finally {
-        setLoadingHistory(false);
-      }
-    };
 
-    loadHistory();
-  }, []);
 
-  // Return badge color based on status
-  const getStatusVariant = (status) => {
-    switch (status?.toLowerCase()) {
-      case "success":
-        return "default";
-      case "running":
-      case "pending":
-        return "secondary";
-      case "failed":
-        return "destructive";
-      default:
-        return "outline";
-    }
-  };
+
+
+export default function RedistributionHistory({taskList , taskListLoading , taskListError , searchTerm , setSearchTerm}) {
+
+
+  const [detailsDialogOpen , setDetailsDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+
+  const handleViewDetails = (task) => {
+    // Placeholder for view details functionality
+    // You can implement this to show more details about the task
+    setSelectedTask(task);
+    setDetailsDialogOpen(true);
+    console.log("View details clicked");
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
           <History className="mr-2 inline-block h-5 w-5" />
-          <span className="font-bold text-2xl"> Redistribution History</span>
+          <span className="font-bold text-2xl"> Tasks History</span>
         </CardTitle>
-        <CardDescription>View past and scheduled tasks.</CardDescription>
+        <CardDescription>View past tasks.</CardDescription>
       </CardHeader>
+
+
       <CardContent className="p-0">
-        {loadingHistory ? (
+
+
+        <div className="w-full px-6 py-4">
+          <SearchBar 
+          placeholder="Search Task by Task Type ..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          ariaLabel="Search Subaria"
+          className='sm:w-72'
+          />
+        </div>
+
+
+
+        {/* Loading State */}
+        {taskListLoading ? (
           <p className="p-6 text-center">Loading history...</p>
-        ) : history.length === 0 ? (
+        ) : taskListError ? (
+          // Error State
+          <p className="p-6 text-center text-red-500">
+            {taskListError}
+          </p>
+        ) : !taskList || taskList.length === 0 ? (
+          // Empty State
           <p className="p-6 text-center text-muted-foreground">
             No history found.
           </p>
@@ -100,34 +93,166 @@ export default function RedistributionHistory() {
             <TableHeader>
               <TableRow>
                 <TableHead>Task ID</TableHead>
+                <TableHead>Task Type</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Target</TableHead>
-                <TableHead>Timestamp</TableHead>
+                <TableHead>Target Device</TableHead>
+                <TableHead>createdAt</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
-            </TableHeader>
+            </TableHeader> 
             <TableBody>
-              {history.map((task) => (
+              {taskList.map((task) => (
                 <TableRow key={task.taskId}>
+
+                  <TableCell className='font-mono text-xs'>{task.taskId}</TableCell>
+
                   <TableCell className="font-mono text-xs">
-                    {task.taskId}
+                    <StatusBadge status={task.taskType} >
+                      {task.taskType || "Unknown"}
+                    </StatusBadge>
                   </TableCell>
+
                   <TableCell>
-                    <Badge variant={getStatusVariant(task.status)}>
+                    <StatusBadge status={task.status}>
                       {task.status}
-                    </Badge>
+                    </StatusBadge>
                   </TableCell>
+
+
                   <TableCell>
-                    {task.target === "All" ? "All Devices" : task.target}
+                    {task?.device ? task?.device?.deviceGuid || "" : <span className="text-xs">All Device</span>}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(task.timestamp).toLocaleString()}
+                    {new Date(task.created_at).toLocaleString()}
                   </TableCell>
+
+
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleViewDetails(task)}
+                      aria-label="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         )}
       </CardContent>
+
+
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Task Details</DialogTitle>
+                  <DialogDescription>
+                    Detailed information about the selected Task.
+                  </DialogDescription>
+                </DialogHeader>
+                {selectedTask && (
+                  <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+                    
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Type</dt>
+                      <dd className="text-sm font-bold text-gray-700">
+                        <StatusBadge status={selectedTask.taskType}>
+                          {selectedTask.taskType || "Unknown"}
+                        </StatusBadge>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Status</dt>
+                      <dd>
+                        <StatusBadge status={selectedTask.status}>
+                          {selectedTask.status}
+                        </StatusBadge>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Target Device</dt>
+                      <dd className="text-sm font-bold text-gray-700">
+                        {selectedTask?.device
+                          ? selectedTask.device.deviceGuid || ""
+                          : "All Device"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Target Subaria</dt>
+                      <dd className="text-sm font-bold text-gray-700">
+                        {selectedTask?.subset
+                          ? selectedTask.subset.subsetIdentifier || ""
+                          :"N|A"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Target Gateway</dt>
+                      <dd className="text-sm font-bold text-gray-700">
+                        {selectedTask?.gateway
+                          ? selectedTask.gateway.gatewayGuid || ""
+                          : "N|A"}
+                      </dd>
+                    </div> 
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Result Message</dt>
+                      <dd className="text-sm font-bold text-gray-700">
+                        {selectedTask.resultMessage ? selectedTask.resultMessage  :"N/A"}
+                      </dd>
+                    </div> 
+
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Created At</dt>
+                      <dd className="text-sm text-muted-foreground">
+                        {selectedTask.created_at
+                          ? new Date(selectedTask.created_at).toLocaleString()
+                          : "N/A"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Updated At</dt>
+                      <dd className="text-sm text-muted-foreground">
+                        {selectedTask.updated_at
+                          ? new Date(selectedTask.updated_at).toLocaleString()
+                          : "N/A"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Started At</dt>
+                      <dd className="text-sm text-muted-foreground">
+                        {selectedTask.startedAt
+                          ? new Date(selectedTask.startedAt).toLocaleString()
+                          : "N/A"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Completed At</dt>
+                      <dd className="text-sm text-muted-foreground">
+                        {selectedTask.completedAt
+                          ? new Date(selectedTask.completedAt).toLocaleString()
+                          : "N/A"}
+                      </dd>
+                    </div>
+
+                    {/* Add more fields here if needed */}
+                  </dl>
+                )}
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+      </Dialog>
     </Card>
   );
 }

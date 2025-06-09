@@ -39,6 +39,8 @@ export const KEY_ENCRYPTION_PASS = process.env.KEY_ENCRYPTION_PASS || "fall-back
 
 
 export const TYPE_TASK = {
-    REFRESH_PAIRWAISE_KEY: 'refresh_pairwise_keys' ,
-    SCHEDULED_PAIRWISE_KEY_REFRESH_ORCHESTRATION: 'scheduled_pairwise_key_refresh_orchestration',
+    PROVISION:"provision",
+    REVOCATION:"revocation",
+    REFRESH: 'refresh' ,
+    SCHEDULED: 'scheduled',
 }

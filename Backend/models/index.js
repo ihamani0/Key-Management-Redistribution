@@ -8,6 +8,7 @@ import GatewayModel from "./gateway.model.js"
 import DeviceModel from "./device.model.js"
 import keyRedistributionTaskModel from "./keyRedistributionTask.model.js";
 import DeviceKeyModel from "./deviceKey.model.js";
+import AuditLogModel from "./auditLog.model.js";
 
 import { Op, Sequelize, DataTypes } from "sequelize";
 
@@ -22,9 +23,20 @@ const db = {
     Gateway: GatewayModel(sequelize, DataTypes),
     Device: DeviceModel(sequelize, DataTypes),
     KeyTask: keyRedistributionTaskModel(sequelize, DataTypes) ,
-    DeviceKey : DeviceKeyModel(sequelize, DataTypes)
+    DeviceKey : DeviceKeyModel(sequelize, DataTypes),
+    AuditLog : AuditLogModel(sequelize, DataTypes)
 }
 
+
+db.AuditLog.belongsTo(db.User, {
+  foreignKey: 'changed_by',
+  as: 'changedByUser'
+});
+
+db.User.hasMany(db.AuditLog, {
+  foreignKey: 'changed_by',
+  as: 'auditLogs'
+});
 
 
 // Subset relationships (for linear EVKMS-like structures)

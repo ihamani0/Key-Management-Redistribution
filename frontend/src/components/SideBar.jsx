@@ -1,13 +1,18 @@
+import { logoutUser } from "@/features/auth/authSlice";
 import {
   Activity,
   KeyRound,
   LayoutDashboard,
+  LogOutIcon,
+  MapPinned,
+  Router,
   Smartphone,
   X,
 } from "lucide-react";
 import React from "react";
+import { useDispatch } from "react-redux";
 
-import { NavLink } from "react-router-dom";
+import { NavLink , useNavigate } from "react-router-dom";
 function SideBar({ isSidebarOpen, closeSidebar }) {
   const navItems = [
     {
@@ -17,15 +22,27 @@ function SideBar({ isSidebarOpen, closeSidebar }) {
       icon: <LayoutDashboard size={20} />,
     },
     {
+      name: "Subaria",
+      id: "subaria",
+      to: "subaria",
+      icon: <MapPinned  size={20} />,
+    },
+    {
+      name: "Gateway",
+      id: "gateway",
+      to: "gateway",
+      icon: <Router size={20} />,
+    },
+    {
       name: "Devices",
       id: "devices",
       to: "devices",
       icon: <Smartphone size={20} />,
     },
     {
-      name: "Key Redistribution",
-      id: "key_edistribution",
-      to: "redistribution",
+      name: "Key Management",
+      id: "key_management",
+      to: "key-management",
       icon: <KeyRound size={20} />,
     },
     {
@@ -35,6 +52,15 @@ function SideBar({ isSidebarOpen, closeSidebar }) {
       icon: <Activity size={20} />,
     },
   ];
+
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+  dispatch(logoutUser());
+  navigate("/login");
+  };
 
   return (
     <div
@@ -69,6 +95,14 @@ function SideBar({ isSidebarOpen, closeSidebar }) {
             </NavLink>
           ))}
         </ul>
+
+        <button
+            onClick={handleLogout}
+            className="flex items-center w-full p-1 md:p-3 rounded-lg text-gray-800 dark:text-my-light hover:bg-gray-200 dark:hover:bg-gray-800 transition-all duration-200 mt-6"
+          >
+            <LogOutIcon size={20} />
+            <span className="ms-4 text-xs md:text-base">Logout</span>
+        </button>
       </div>
     </div>
   );

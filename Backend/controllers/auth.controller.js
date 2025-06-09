@@ -129,6 +129,9 @@ export const registerController = expressAsyncHandler(async (req, res) => {
 //apply json
 
 export const LogoutController = expressAsyncHandler(async (req, res) => {
+  
+  // res.status(200).json(req.user)
+
   res.clearCookie("authToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
