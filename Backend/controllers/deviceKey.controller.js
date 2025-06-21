@@ -151,7 +151,11 @@ export const updateDeviceKeyRefreshStatus = expressAsyncHandler(async (req, res)
 
 
     const [count] = await DeviceKey.update(
-        { keyVersion: sequelize.literal('key_version + 1'), keyStatus: 'active', keyHash: newRefreshedKeyHash, updatedAt: new Date() },
+        { 
+            keyVersion: sequelize.literal('key_version + 1'), 
+            keyStatus: 'active' ,
+            updatedAt: new Date() 
+        },
         {
             where: {
                 keyType: 'pairwise',

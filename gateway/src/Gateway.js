@@ -204,7 +204,7 @@ export default class Gateway {
             // 1. Update the task status on server
             this.updateServerTaskStatusInternal(payload.taskId, 'completed');
             // 2. Update DeviceKey records on server
-            this.reportPairwiseKeyRefreshToServer(payload);
+            // this.reportPairwiseKeyRefreshToServer(payload);
             // 3. Update device status back to 'running'
             this.updateServerDeviceStatus(deviceGuid, 'running');
 
