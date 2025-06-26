@@ -173,4 +173,4 @@ MIT (or specify your license)
 
 ## Contact
 
-For questions or collaboration, email: your-email@example.com
+For questions or collaboration, email: issamedhamani@outlook.com
